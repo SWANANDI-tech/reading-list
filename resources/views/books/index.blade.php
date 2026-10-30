@@ -10,15 +10,16 @@
     @else
         <table>
             <thead>
-                <tr><th>Title</th><th>Author</th><th>Status</th></tr>
+                <tr><th>Title</th><th>Author</th><th>Status</th><th></th></tr>
             </thead>
             <tbody>
                 @foreach ($books as $book)
                     <tr>
-                        <td>{{ $book->title }}</td>
-                        <td>{{ $book->author }}</td>
-                        <td>{{ \App\Models\Book::STATUSES[$book->status] ?? $book->status }}</td>
-                    </tr>
+    <td>{{ $book->title }}</td>
+    <td>{{ $book->author }}</td>
+    <td>{{ \App\Models\Book::STATUSES[$book->status] ?? $book->status }}</td>
+    <td><a href="{{ route('books.edit', $book) }}">Edit</a></td>
+</tr>
                 @endforeach
             </tbody>
         </table>

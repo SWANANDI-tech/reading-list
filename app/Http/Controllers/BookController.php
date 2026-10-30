@@ -50,19 +50,23 @@ public function store(Request $request)
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
-        //
-    }
+   public function edit(Book $book)
+{
+    return view('books.edit', compact('book'));
+}
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+public function update(Request $request, Book $book)
+{
+    $data = $request->validate([
+        'title'  => ['required', 'max:255'],
+        'author' => ['required', 'max:255'],
+        'status' => ['required', Rule::in(array_keys(Book::STATUSES))],
+    ]);
 
+    $book->update($data);
+
+    return redirect()->route('books.index')->with('success', 'Book updated.');
+}
     /**
      * Remove the specified resource from storage.
      */
