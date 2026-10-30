@@ -1,29 +1,18 @@
-{{-- old('title', ...) keeps what you typed if validation fails --}}
-<div class="form-group">
-    <label for="title">Title</label>
-    <input type="text" id="title" name="title" value="{{ old('title', $book->title ?? '') }}">
-    @error('title') <div class="error">{{ $message }}</div> @enderror
-</div>
+@extends('layouts.app')
 
-<div class="form-group">
-    <label for="author">Author</label>
-    <input type="text" id="author" name="author" value="{{ old('author', $book->author ?? '') }}">
-    @error('author') <div class="error">{{ $message }}</div> @enderror
-</div>
+@section('title', 'Add book')
+@section('heading', 'Add a new book')
+@section('subheading', 'Fill in the details and save it to your shelf')
 
-<div class="form-group">
-    <label for="status">Status</label>
-    <select id="status" name="status">
-        @foreach ($labels as $value => $label)
-            <option value="{{ $value }}" {{ old('status', $book->status ?? 'to_read') === $value ? 'selected' : '' }}>
-                {{ $label }}
-            </option>
-        @endforeach
-    </select>
-    @error('status') <div class="error">{{ $message }}</div> @enderror
-</div>
+@section('content')
+    {{-- A narrow white card in the middle of the page --}}
+    <div class="card" style="max-width: 560px; margin: 0 auto 24px;">
+        <h2 style="margin-top: 0;">📚 Book details</h2>
 
-<div class="form-actions">
-    <button type="submit" class="btn btn-primary">Save</button>
-    <a href="{{ route('books.index') }}">Cancel</a>
-</div>
+        <form method="POST" action="{{ route('books.store') }}">
+            @csrf
+            {{-- The input boxes live in _form.blade.php, shared with the Edit page --}}
+            @include('books._form')
+        </form>
+    </div>
+@endsection
