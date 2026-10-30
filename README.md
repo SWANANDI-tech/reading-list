@@ -1,33 +1,88 @@
-# Reading List
+# ShelfLife
 
-A small Laravel app to keep track of books I want to read, am reading,
-or have finished. You can add, edit and delete books, and filter the
-list by status (To read, Reading, Finished). No login is needed.
+ShelfLife is a small Laravel web app for keeping track of books. You can add books, mark each one as To read, Reading or Finished, rate the ones you finish, and look back at everything you have read on a History page.
 
-## How to run
+## Features
 
-Requirements: PHP 8.2 or newer, Composer.
+- Add, edit and delete books (delete asks for confirmation)
+- Status for each book: To read, Reading or Finished
+- Filter books by status and search by title or author
+- Star rating (1 to 5) for finished books
+- "Start reading" and "Mark finished" buttons for quick updates
+- History page that groups finished books by month, with a yearly reading goal bar
+- Pastel design that works on phones and computers
+- No login needed
 
-```bash
-git clone https://github.com/SWANANDI-tech/reading-list.git
-cd reading-list
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate
-php artisan serve
-```
+## Requirements
 
-On Windows PowerShell, use `copy .env.example .env` instead of `cp`.
+- PHP 8.2 or newer
+- Composer
+- Git
 
-If `php artisan migrate` asks to create the SQLite database file, answer yes.
-Then open http://localhost:8000 in your browser.
+## Setup steps
+
+1. Download the project:
+
+   ```
+   git clone https://github.com/YOUR-USERNAME/YOUR-REPO-NAME.git
+   cd YOUR-REPO-NAME
+   ```
+
+2. Install the PHP packages:
+
+   ```
+   composer install
+   ```
+
+3. Create the settings file:
+
+   - Windows: `copy .env.example .env`
+   - Mac or Linux: `cp .env.example .env`
+
+4. Generate the app key:
+
+   ```
+   php artisan key:generate
+   ```
+
+5. Create the database tables (if it asks to create the SQLite database file, answer yes):
+
+   ```
+   php artisan migrate
+   ```
+
+6. (Optional) Add sample books so the site is not empty:
+
+   ```
+   php artisan db:seed
+   ```
+
+7. Start the website:
+
+   ```
+   php artisan serve
+   ```
+
+8. Open http://localhost:8000/books in your browser.
+
+## How to use
+
+- Click **+ Add book** to add a book.
+- Use the **All / To read / Reading / Finished** pills to filter, or type in the search box.
+- Click **Start reading** or **Mark finished** in a row to move a book forward.
+- Open **History** in the top menu to see finished books and your yearly goal.
 
 ## AI usage
 
-- I used Claude to explain how Laravel resource routes, controllers,
-  Blade layouts and validation work, and to guide me through each step.
-- Claude gave me the code step by step, and I typed it into my files,
-  tested it in the browser, and fixed errors (for example a wrongly named
-  form file and a broken table row).
-- I made one commit per step and I understand every line I committed.
+I used Claude (an AI assistant by Anthropic) while building this project. It helped me to:
+
+- Plan the structure of the app (model, controller, routes, views)
+- Write and explain code for the pages, the search and filters, the star rating, the history page and the sample-data seeder
+- Design the pastel styling and layout
+- Learn the Git commands for making commits
+
+I typed the code into my own project, ran it, tested each feature in the browser, and fixed errors myself. I made the final choices about the name, colours and features.
+
+## Author
+
+Swanandi Nimbalkar
