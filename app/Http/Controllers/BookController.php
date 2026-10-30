@@ -58,8 +58,9 @@ class BookController extends Controller
         ];
         [$sortColumn, $sortDirection] = $sortOptions[$request->query('sort', 'newest')] ?? $sortOptions['newest'];
 
-        $books = Book::query()
+                $books = Book::query()
             ->when($status, fn ($q) => $q->where('status', $status))
+            ->when($request->query('bookmarked'), fn ($q) => $q->where('bookmarked', true))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($inner) use ($search) {
                     $inner->where('title', 'like', "%{$search}%")
@@ -68,7 +69,8 @@ class BookController extends Controller
             })
             ->orderBy($sortColumn, $sortDirection)
             ->get();
-
+           
+            
         return view('books.index', [
             'books'    => $books,
             'status'   => $status,
@@ -157,6 +159,13 @@ class BookController extends Controller
 
         return redirect()->back()->with('success', $message);
     }
+
+    public function toggleBookmark(Book $book)
+{
+    $book->update(['bookmarked' => ! $book->bookmarked]);
+
+    return redirect()->back();
+}
 
     public function destroy(Book $book)
     {

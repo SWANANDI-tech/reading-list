@@ -44,6 +44,23 @@
 </form>
         </div>
 
+        {{-- Search box --}}
+<form method="GET" action="{{ route('books.index') }}" style="display:flex; gap:8px; margin:12px 0 18px; flex-wrap:wrap;">
+    @if (!empty($status))
+        <input type="hidden" name="status" value="{{ $status }}">
+    @endif
+    @if (request('sort'))
+        <input type="hidden" name="sort" value="{{ request('sort') }}">
+    @endif
+
+    <input type="text" name="q" value="{{ $search ?? '' }}" placeholder="Search by title or author"
+           style="flex:1; min-width:180px; padding:8px 14px; border:1px solid #e3d9f3; border-radius:999px;">
+    <button type="submit" class="btn">Search</button>
+
+    @if (!empty($search))
+        <a href="{{ route('books.index', array_filter(['status' => $status, 'sort' => request('sort')])) }}" style="align-self:center;">Clear</a>
+    @endif
+</form>
         @if ($books->isEmpty())
             <div class="empty">
                 {{ ($status || $search !== '') ? 'No books match your search.' : 'No books yet.' }}
@@ -63,7 +80,17 @@
                     <tbody>
                         @foreach ($books as $book)
                             <tr>
-                                <td>{{ $book->title }}</td>
+                                <td>
+    <form method="POST" action="{{ route('books.bookmark', $book) }}" style="display:inline;">
+        @csrf
+        @method('PATCH')
+        <button type="submit" title="Bookmark"
+                style="background:none; border:none; cursor:pointer; font-size:1.1rem; color: {{ $book->bookmarked ? '#e0a82e' : '#cfc6e0' }};">
+            {{ $book->bookmarked ? '★' : '☆' }}
+        </button>
+    </form>
+    {{ $book->title }}
+</td>
                                 <td>{{ $book->author }}</td>
                                 <td>
                                     <span class="badge badge-{{ $book->status }}">

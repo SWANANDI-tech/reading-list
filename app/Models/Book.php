@@ -12,5 +12,7 @@ class Book extends Model
     // Makes finished_at behave like a real date (so we can format it)
     protected $casts = [
         'finished_at' => 'date',
+        'bookmarked' => 'boolean',
+
     ];
 }
