@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class BookController extends Controller
 {
@@ -21,17 +22,22 @@ class BookController extends Controller
      * Show the form for creating a new resource.
      */
     public function create()
-    {
-        //
-    }
+{
+    return view('books.create');
+}
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+public function store(Request $request)
+{
+    $data = $request->validate([
+        'title'  => ['required', 'max:255'],
+        'author' => ['required', 'max:255'],
+        'status' => ['required', Rule::in(array_keys(Book::STATUSES))],
+    ]);
+
+    Book::create($data);
+
+    return redirect()->route('books.index')->with('success', 'Book added.');
+}
 
     /**
      * Display the specified resource.
