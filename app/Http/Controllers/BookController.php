@@ -70,8 +70,10 @@ public function update(Request $request, Book $book)
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
-    }
+    public function destroy(Book $book)
+{
+    $book->delete();
+
+    return redirect()->route('books.index')->with('success', 'Book deleted.');
+}
 }
