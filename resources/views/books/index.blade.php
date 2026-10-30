@@ -4,12 +4,12 @@
 
 @section('content')
 
-    {{-- Four stat cards. The numbers come from the controller. --}}
+    {{-- Four pastel stat cards --}}
     <div class="stats">
-        <div class="stat-card"><div class="label">Total books</div><div class="number">{{ $total }}</div></div>
-        <div class="stat-card"><div class="label">To read</div><div class="number">{{ $toRead }}</div></div>
-        <div class="stat-card"><div class="label">Reading</div><div class="number">{{ $reading }}</div></div>
-        <div class="stat-card"><div class="label">Finished</div><div class="number">{{ $finished }}</div></div>
+        <div class="stat-card stat-total"><div class="label">Total books</div><div class="number">{{ $total }}</div></div>
+        <div class="stat-card stat-to_read"><div class="label">To read</div><div class="number">{{ $toRead }}</div></div>
+        <div class="stat-card stat-reading"><div class="label">Reading</div><div class="number">{{ $reading }}</div></div>
+        <div class="stat-card stat-finished"><div class="label">Finished</div><div class="number">{{ $finished }}</div></div>
     </div>
 
     <div class="card">
@@ -18,16 +18,29 @@
             <a href="{{ route('books.create') }}" class="btn btn-primary">+ Add book</a>
         </div>
 
-        {{-- Filter pills: the selected one gets the "active" class and turns blue --}}
-        <div class="filters">
-            <a href="{{ route('books.index') }}" class="pill {{ $status === null ? 'active' : '' }}">All</a>
-            <a href="{{ route('books.index', ['status' => 'to_read']) }}" class="pill {{ $status === 'to_read' ? 'active' : '' }}">To read</a>
-            <a href="{{ route('books.index', ['status' => 'reading']) }}" class="pill {{ $status === 'reading' ? 'active' : '' }}">Reading</a>
-            <a href="{{ route('books.index', ['status' => 'finished']) }}" class="pill {{ $status === 'finished' ? 'active' : '' }}">Finished</a>
+        <div class="toolbar">
+            {{-- Filter pills (they keep your search text when you click them) --}}
+            <div class="filters">
+                <a href="{{ route('books.index', ['q' => $search]) }}" class="pill {{ $status === null ? 'active' : '' }}">All</a>
+                <a href="{{ route('books.index', ['status' => 'to_read', 'q' => $search]) }}" class="pill {{ $status === 'to_read' ? 'active' : '' }}">To read</a>
+                <a href="{{ route('books.index', ['status' => 'reading', 'q' => $search]) }}" class="pill {{ $status === 'reading' ? 'active' : '' }}">Reading</a>
+                <a href="{{ route('books.index', ['status' => 'finished', 'q' => $search]) }}" class="pill {{ $status === 'finished' ? 'active' : '' }}">Finished</a>
+            </div>
+
+            {{-- Search box: searches title and author --}}
+            <form method="GET" action="{{ route('books.index') }}" class="search">
+                @if ($status)
+                    <input type="hidden" name="status" value="{{ $status }}">
+                @endif
+                <input type="text" name="q" value="{{ $search }}" placeholder="Search title or author">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
         </div>
 
         @if ($books->isEmpty())
-            <div class="empty">No books yet.</div>
+            <div class="empty">
+                {{ ($status || $search !== '') ? 'No books match your search.' : 'No books yet.' }}
+            </div>
         @else
             <div class="table-wrap">
                 <table>
@@ -36,6 +49,7 @@
                             <th>Title</th>
                             <th>Author</th>
                             <th>Status</th>
+                            <th>Rating</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -45,16 +59,24 @@
                                 <td>{{ $book->title }}</td>
                                 <td>{{ $book->author }}</td>
                                 <td>
-                                    {{-- The badge color depends on the status --}}
                                     <span class="badge badge-{{ $book->status }}">
                                         {{ $labels[$book->status] ?? $book->status }}
                                     </span>
                                 </td>
                                 <td>
+                                    {{-- Filled stars for the rating, faded stars for the rest --}}
+                                    @if ($book->rating)
+                                        <span class="stars">
+                                            {{ str_repeat('★', $book->rating) }}<span class="off">{{ str_repeat('★', 5 - $book->rating) }}</span>
+                                        </span>
+                                    @else
+                                        <span style="color: var(--muted)">-</span>
+                                    @endif
+                                </td>
+                                <td>
                                     <div class="actions">
                                         <a href="{{ route('books.edit', $book) }}">Edit</a>
 
-                                        {{-- Delete asks "Are you sure?" before submitting --}}
                                         <form method="POST" action="{{ route('books.destroy', $book) }}"
                                               onsubmit="return confirm('Delete this book?');">
                                             @csrf
