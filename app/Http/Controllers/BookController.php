@@ -74,20 +74,37 @@ class BookController extends Controller
     }
 
     // History page: finished books grouped by month
+        // History page: finished books grouped by month, with search and yearly goal
     public function history()
     {
-        $finished = Book::where('status', 'finished')
+        $search = trim((string) request('search', ''));
+
+        // Stats always use ALL finished books
+        $all = Book::where('status', 'finished')
             ->orderByDesc('finished_at')
             ->get();
 
-        // Books finished before the date column existed go under "Earlier"
-        $grouped = $finished->groupBy(fn ($b) => $b->finished_at?->format('F Y') ?? 'Earlier');
+        // The list uses only the books that match the search
+        $shown = $search === ''
+            ? $all
+            : $all->filter(fn ($b) => str_contains(
+                strtolower($b->title . ' ' . $b->author),
+                strtolower($search)
+            ));
+
+        $grouped = $shown->groupBy(fn ($b) => $b->finished_at?->format('F Y') ?? 'Earlier');
+
+        $thisYear = $all->filter(fn ($b) => $b->finished_at?->year === now()->year)->count();
+        $goal = 12;
 
         return view('books.history', [
             'grouped'  => $grouped,
-            'count'    => $finished->count(),
-            'thisYear' => $finished->filter(fn ($b) => $b->finished_at?->year === now()->year)->count(),
-            'average'  => round($finished->whereNotNull('rating')->avg('rating') ?? 0, 1),
+            'count'    => $all->count(),
+            'thisYear' => $thisYear,
+            'average'  => round($all->whereNotNull('rating')->avg('rating') ?? 0, 1),
+            'goal'     => $goal,
+            'percent'  => min(100, round($thisYear / $goal * 100)),
+            'search'   => $search,
         ]);
     }
 
@@ -96,12 +113,12 @@ class BookController extends Controller
         return view('books.create', ['labels' => $this->labels]);
     }
 
-    public function store(Request $request)
-    {
-        $data = $this->withFinishedDate($request->validate($this->rules()));
-        Book::create($data);
-        return redirect()->route('books.index')->with('success', 'Book added.');
-    }
+   public function store(Request $request)
+{
+    $data = $this->withFinishedDate($request->validate($this->rules()));
+    Book::create($data);
+    return redirect()->route('books.index')->with('success', 'Book added.');
+}
 
     public function edit(Book $book)
     {
@@ -120,4 +137,17 @@ class BookController extends Controller
         $book->delete();
         return redirect()->route('books.index')->with('success', 'Book deleted.');
     }
+
+private function rules(): array
+{
+    return [
+        'title'  => 'required|string|max:255',
+        'author' => 'required|string|max:255',
+        'status' => 'required|in:to_read,reading,finished',
+        'rating' => 'nullable|integer|min:1|max:5',
+        // ...
+        'genre'  => 'nullable|string|max:50',
+        'notes'  => 'nullable|string|max:1000',
+    ];
+}
 }
