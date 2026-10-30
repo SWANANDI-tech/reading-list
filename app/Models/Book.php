@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Book extends Model
 {
-    public const STATUSES = [
-        'to-read'  => 'To read',
-        'reading'  => 'Reading',
-        'finished' => 'Finished',
-    ];
+    // Columns that are allowed to be saved from a form
+    protected $fillable = ['title', 'author', 'status', 'rating', 'finished_at'];
 
-    protected $fillable = ['title', 'author', 'status'];
+    // Makes finished_at behave like a real date (so we can format it)
+    protected $casts = [
+        'finished_at' => 'date',
+    ];
 }
