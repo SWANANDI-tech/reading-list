@@ -5,6 +5,14 @@
 
     <a href="{{ route('books.create') }}" class="btn">Add book</a>
 
+    <p class="filters">
+        <a href="{{ route('books.index') }}" class="{{ $status === null ? 'active' : '' }}">All</a>
+        @foreach (\App\Models\Book::STATUSES as $value => $label)
+            <a href="{{ route('books.index', ['status' => $value]) }}"
+               class="{{ $status === $value ? 'active' : '' }}">{{ $label }}</a>
+        @endforeach
+    </p>
+
     @if ($books->isEmpty())
         <p>No books yet.</p>
     @else

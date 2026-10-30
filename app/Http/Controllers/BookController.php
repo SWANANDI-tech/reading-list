@@ -11,13 +11,22 @@ class BookController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $books = Book::latest()->get();
+    public function index(Request $request)
+{
+    $status = $request->query('status');
 
-        return view('books.index', compact('books'));
+    $query = Book::latest();
+
+    if ($status && isset(Book::STATUSES[$status])) {
+        $query->where('status', $status);
+    } else {
+        $status = null;
     }
 
+    $books = $query->get();
+
+    return view('books.index', compact('books', 'status'));
+}
     /**
      * Show the form for creating a new resource.
      */
