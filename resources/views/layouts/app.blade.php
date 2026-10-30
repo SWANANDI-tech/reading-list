@@ -179,7 +179,23 @@
         .error { color: #c0392b; font-size: 0.85rem; margin-top: 5px; }
         .form-actions { display: flex; align-items: center; gap: 16px; }
 
+                /* ---------- Yearly goal bar ---------- */
+        .goal-top { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 600; }
+        .goal-track { background: #efe6fa; border-radius: 999px; height: 16px; overflow: hidden; }
+        .goal-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #cdb8f0, #f8c8dc, #ffe0c2); }
+
+        /* ---------- Small soft button ("Start reading", "Mark finished") ---------- */
+        .btn-soft { background: #efe6fa; color: #5b3f8c; padding: 5px 12px; font-size: 0.85rem; }
+        .btn-soft:hover { background: #e3d9f3; }
+
+        /* ---------- Status pills ---------- */
+        .pill { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+        .pill-to_read { background: #ffe5d4; color: #a8572a; }
+        .pill-reading { background: #d9eafb; color: #2c5f93; }
+        .pill-finished { background: #d6f1e1; color: #237a4b; }
+        
         /* ---------- Success message ---------- */
+        
         .flash {
             background: #d8f3e3;
             color: #1e7048;

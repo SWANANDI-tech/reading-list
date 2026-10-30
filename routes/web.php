@@ -3,6 +3,7 @@
 use App\Http\Controllers\BookController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('books.index'));
+Route::redirect('/', '/books');
 Route::get('/history', [BookController::class, 'history'])->name('books.history');
+Route::patch('/books/{book}/advance', [BookController::class, 'advance'])->name('books.advance');
 Route::resource('books', BookController::class)->except(['show']);

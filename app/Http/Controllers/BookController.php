@@ -21,13 +21,13 @@ class BookController extends Controller
             'title'  => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'status' => 'required|in:to_read,reading,finished',
-            'rating' => 'nullable|integer|between:1,5',
+            'rating' => 'nullable|integer|min:1|max:5',
+            'genre'  => 'nullable|string|max:50',
+            'notes'  => 'nullable|string|max:1000',
         ];
     }
 
     // Fills in the finished date automatically.
-    // Finished  -> keep the old date, or use today if it is new.
-    // Otherwise -> clear the date and the rating.
     private function withFinishedDate(array $data, ?Book $book = null): array
     {
         if ($data['status'] === 'finished') {
@@ -36,28 +36,37 @@ class BookController extends Controller
             $data['finished_at'] = null;
             $data['rating'] = null;
         }
+
         return $data;
     }
 
-    // List page, with optional filter ?status=reading and search ?q=dune
+    // List page, with optional filter (status), search and sorting
     public function index(Request $request)
     {
         $status = $request->query('status');
-        if (! array_key_exists($status ?? '', $this->labels)) {
-            $status = null;   // anything unknown means "All"
+        if (! array_key_exists((string) $status, $this->labels)) {
+            $status = null;
         }
+
         $search = trim((string) $request->query('q', ''));
+
+        $sortOptions = [
+            'newest' => ['created_at', 'desc'],
+            'title'  => ['title', 'asc'],
+            'author' => ['author', 'asc'],
+            'rating' => ['rating', 'desc'],
+        ];
+        [$sortColumn, $sortDirection] = $sortOptions[$request->query('sort', 'newest')] ?? $sortOptions['newest'];
 
         $books = Book::query()
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($search !== '', function ($q) use ($search) {
-                // Match the search text in the title OR the author
                 $q->where(function ($inner) use ($search) {
                     $inner->where('title', 'like', "%{$search}%")
                           ->orWhere('author', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('title')
+            ->orderBy($sortColumn, $sortDirection)
             ->get();
 
         return view('books.index', [
@@ -65,7 +74,6 @@ class BookController extends Controller
             'status'   => $status,
             'search'   => $search,
             'labels'   => $this->labels,
-            // Stat card numbers always count ALL books
             'total'    => Book::count(),
             'toRead'   => Book::where('status', 'to_read')->count(),
             'reading'  => Book::where('status', 'reading')->count(),
@@ -73,18 +81,15 @@ class BookController extends Controller
         ]);
     }
 
-    // History page: finished books grouped by month
-        // History page: finished books grouped by month, with search and yearly goal
+    // History page: finished books grouped by month, with search and yearly goal
     public function history()
     {
         $search = trim((string) request('search', ''));
 
-        // Stats always use ALL finished books
         $all = Book::where('status', 'finished')
             ->orderByDesc('finished_at')
             ->get();
 
-        // The list uses only the books that match the search
         $shown = $search === ''
             ? $all
             : $all->filter(fn ($b) => str_contains(
@@ -113,12 +118,13 @@ class BookController extends Controller
         return view('books.create', ['labels' => $this->labels]);
     }
 
-   public function store(Request $request)
-{
-    $data = $this->withFinishedDate($request->validate($this->rules()));
-    Book::create($data);
-    return redirect()->route('books.index')->with('success', 'Book added.');
-}
+    public function store(Request $request)
+    {
+        $data = $this->withFinishedDate($request->validate($this->rules()));
+        Book::create($data);
+
+        return redirect()->route('books.index')->with('success', 'Book added.');
+    }
 
     public function edit(Book $book)
     {
@@ -129,25 +135,33 @@ class BookController extends Controller
     {
         $data = $this->withFinishedDate($request->validate($this->rules()), $book);
         $book->update($data);
+
         return redirect()->route('books.index')->with('success', 'Book updated.');
+    }
+
+    // Moves a book forward: To read -> Reading -> Finished
+    public function advance(Book $book)
+    {
+        if ($book->status === 'to_read') {
+            $book->update(['status' => 'reading']);
+            $message = 'Started reading "' . $book->title . '".';
+        } elseif ($book->status === 'reading') {
+            $book->update([
+                'status'      => 'finished',
+                'finished_at' => now()->toDateString(),
+            ]);
+            $message = 'Finished "' . $book->title . '". Nice!';
+        } else {
+            return redirect()->route('books.index');
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 
     public function destroy(Book $book)
     {
         $book->delete();
+
         return redirect()->route('books.index')->with('success', 'Book deleted.');
     }
-
-private function rules(): array
-{
-    return [
-        'title'  => 'required|string|max:255',
-        'author' => 'required|string|max:255',
-        'status' => 'required|in:to_read,reading,finished',
-        'rating' => 'nullable|integer|min:1|max:5',
-        // ...
-        'genre'  => 'nullable|string|max:50',
-        'notes'  => 'nullable|string|max:1000',
-    ];
-}
 }
