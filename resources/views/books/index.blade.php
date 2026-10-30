@@ -28,13 +28,20 @@
             </div>
 
             {{-- Search box: searches title and author --}}
-            <form method="GET" action="{{ route('books.index') }}" class="search">
-                @if ($status)
-                    <input type="hidden" name="status" value="{{ $status }}">
-                @endif
-                <input type="text" name="q" value="{{ $search }}" placeholder="Search title or author">
-                <button type="submit" class="btn btn-primary">Search</button>
-            </form>
+           <form method="GET" action="{{ route('books.index') }}" style="display:inline-block; margin-top:10px;">
+    @if (request('status'))
+        <input type="hidden" name="status" value="{{ request('status') }}">
+    @endif
+    @if (request('search'))
+        <input type="hidden" name="search" value="{{ request('search') }}">
+    @endif
+    <select name="sort" onchange="this.form.submit()">
+        <option value="newest" @selected(request('sort', 'newest') === 'newest')>Newest first</option>
+        <option value="title"  @selected(request('sort') === 'title')>Title (A to Z)</option>
+        <option value="author" @selected(request('sort') === 'author')>Author (A to Z)</option>
+        <option value="rating" @selected(request('sort') === 'rating')>Highest rated</option>
+    </select>
+</form>
         </div>
 
         @if ($books->isEmpty())
