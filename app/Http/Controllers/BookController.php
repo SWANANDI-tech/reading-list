@@ -4,85 +4,75 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class BookController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
-{
-    $status = $request->query('status');
+    // The three allowed statuses and the text shown for each
+    private array $labels = [
+        'to_read'  => 'To read',
+        'reading'  => 'Reading',
+        'finished' => 'Finished',
+    ];
 
-    $query = Book::latest();
-
-    if ($status && isset(Book::STATUSES[$status])) {
-        $query->where('status', $status);
-    } else {
-        $status = null;
-    }
-
-    $books = $query->get();
-
-    return view('books.index', compact('books', 'status'));
-}
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-{
-    return view('books.create');
-}
-
-public function store(Request $request)
-{
-    $data = $request->validate([
-        'title'  => ['required', 'max:255'],
-        'author' => ['required', 'max:255'],
-        'status' => ['required', Rule::in(array_keys(Book::STATUSES))],
-    ]);
-
-    Book::create($data);
-
-    return redirect()->route('books.index')->with('success', 'Book added.');
-}
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    // Rules used when adding and editing
+    private function rules(): array
     {
-        //
+        return [
+            'title'  => 'required|string|max:255',
+            'author' => 'required|string|max:255',
+            'status' => 'required|in:to_read,reading,finished',
+        ];
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-   public function edit(Book $book)
-{
-    return view('books.edit', compact('book'));
-}
+    // List page, with optional filter ?status=reading
+    public function index(Request $request)
+    {
+        $status = $request->query('status');
+        if (! array_key_exists($status ?? '', $this->labels)) {
+            $status = null;   // anything unknown means "All"
+        }
 
-public function update(Request $request, Book $book)
-{
-    $data = $request->validate([
-        'title'  => ['required', 'max:255'],
-        'author' => ['required', 'max:255'],
-        'status' => ['required', Rule::in(array_keys(Book::STATUSES))],
-    ]);
+        $books = Book::when($status, fn ($q) => $q->where('status', $status))
+                     ->orderBy('title')
+                     ->get();
 
-    $book->update($data);
+        return view('books.index', [
+            'books'    => $books,
+            'status'   => $status,
+            'labels'   => $this->labels,
+            // Stat card numbers always count ALL books, not just the filtered ones
+            'total'    => Book::count(),
+            'toRead'   => Book::where('status', 'to_read')->count(),
+            'reading'  => Book::where('status', 'reading')->count(),
+            'finished' => Book::where('status', 'finished')->count(),
+        ]);
+    }
 
-    return redirect()->route('books.index')->with('success', 'Book updated.');
-}
-    /**
-     * Remove the specified resource from storage.
-     */
+    public function create()
+    {
+        return view('books.create', ['labels' => $this->labels]);
+    }
+
+    public function store(Request $request)
+    {
+        Book::create($request->validate($this->rules()));
+        return redirect()->route('books.index')->with('success', 'Book added.');
+    }
+
+    public function edit(Book $book)
+    {
+        return view('books.edit', ['book' => $book, 'labels' => $this->labels]);
+    }
+
+    public function update(Request $request, Book $book)
+    {
+        $book->update($request->validate($this->rules()));
+        return redirect()->route('books.index')->with('success', 'Book updated.');
+    }
+
     public function destroy(Book $book)
-{
-    $book->delete();
-
-    return redirect()->route('books.index')->with('success', 'Book deleted.');
-}
+    {
+        $book->delete();
+        return redirect()->route('books.index')->with('success', 'Book deleted.');
+    }
 }
